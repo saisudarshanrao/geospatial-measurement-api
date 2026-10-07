@@ -1,0 +1,16 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      GEOAPI_LOG_LEVEL: INFO
+      GEOAPI_MAX_UPLOAD_BYTES: "52428800"   # 50 MiB
+      GEOAPI_DEFAULT_STRATEGY: auto
+    volumes:
+      # Uploaded files survive a container restart; the measurement records,
+      # which live in memory, do not. See "Future scope" in the README.
+      - geoapi-uploads:/data/uploads
+
+volumes:
+  geoapi-uploads:

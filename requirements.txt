@@ -1,0 +1,15 @@
+# Runtime dependencies.
+#
+# Deliberately GDAL-free: shapely (bundled GEOS), pyproj (bundled PROJ) and
+# pyshp (pure Python) ship as binary wheels on every mainstream platform, so
+# `pip install -r requirements.txt` works without system packages. See the
+# README's "Design decisions" for why that was preferred to geopandas/fiona.
+fastapi==0.121.2
+uvicorn[standard]==0.40.0
+python-multipart==0.0.32
+pydantic==2.13.5
+
+shapely==2.2.0
+pyproj==3.8.0
+pyshp==3.1.6
+lxml==6.1.3

@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: |
+          ruff check app tests samples
+          ruff format --check app tests samples
+
+      - name: Test
+        run: pytest --cov=app --cov-report=term-missing
+
+      - name: Smoke-test the running service
+        run: |
+          set -euo pipefail
+          python -m samples.make_samples
+          # Keep the PID so the step always reaps the server: a background
+          # process still holding stdout would keep the job hanging.
+          uvicorn app.main:app --port 8000 > uvicorn.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+
+          for _ in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:8000/health > /dev/null; then break; fi
+            sleep 0.5
+          done
+
+          curl -sf -X POST http://127.0.0.1:8000/api/files/ \
+            -F "file=@samples/parcels_4326.zip" -o upload.json
+          python -c "
+          import json
+          body = json.load(open('upload.json'))
+          assert body['status'] == 'COMPLETED', body
+          assert body['feature_count'] == 2, body
+          assert body['crs'] == 'EPSG:4326', body
+          area = body['summary']['total_area_sq_m']
+          assert 2_000_000 < area < 2_600_000, area
+          print('smoke test OK: total area', round(area), 'm2')
+          "
+
+      - name: Server log on failure
+        if: failure()
+        run: cat uvicorn.log || true

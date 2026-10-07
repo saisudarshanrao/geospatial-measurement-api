@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.ruff_cache/
+.mypy_cache/
+
+# Runtime data: uploaded files are not source
+var/
+*.log
+
+# Artifact written by the CI smoke step
+upload.json
+
+# Generated sample files (rebuild with `python -m samples.make_samples`)
+samples/*.zip
+samples/*.kml
+samples/*.kmz
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store

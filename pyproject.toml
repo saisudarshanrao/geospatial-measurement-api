@@ -1,0 +1,48 @@
+[project]
+name = "geospatial-measurement-api"
+version = "1.0.0"
+description = "Upload a Shapefile or KML and get per-feature area and length measurements, with correct CRS handling."
+requires-python = ">=3.12"
+readme = "README.md"
+license = { text = "MIT" }
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app", "samples"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The project is not installed into the environment, and bare `pytest` (unlike
+# `python -m pytest`) does not put the working directory on sys.path. Declaring
+# it here means `pytest`, `python -m pytest`, IDEs and CI all import `app`.
+pythonpath = ["."]
+addopts = "-q --strict-markers --strict-config"
+filterwarnings = [
+    "error",
+    # Starlette's TestClient still touches a deprecated multipart import path.
+    "default::DeprecationWarning:starlette.*",
+    "default::DeprecationWarning:multipart.*",
+]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/logging_config.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "C4", "SIM", "RUF"]
+ignore = [
+    # Shadowing a builtin is the natural name for a repository method.
+    "A003",
+    # FastAPI's dependency pattern requires calls in argument defaults.
+    "B008",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
